@@ -41,6 +41,7 @@ public class KVConfigManager {
         this.namesrvController = namesrvController;
     }
 
+    // 加载config key-value配置
     public void load() {
         String content = null;
         try {

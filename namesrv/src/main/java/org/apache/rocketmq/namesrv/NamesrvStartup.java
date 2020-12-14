@@ -158,6 +158,7 @@ public class NamesrvStartup {
             }
         }));
 
+        // 启动
         controller.start();
 
         return controller;

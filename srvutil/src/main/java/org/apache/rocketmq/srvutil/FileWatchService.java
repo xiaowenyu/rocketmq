@@ -61,6 +61,7 @@ public class FileWatchService extends ServiceThread {
         return "FileWatchService";
     }
 
+    // 启动服务
     @Override
     public void run() {
         log.info(this.getServiceName() + " service started");
