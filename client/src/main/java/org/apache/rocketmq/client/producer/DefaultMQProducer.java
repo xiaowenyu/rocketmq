@@ -268,7 +268,9 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      */
     @Override
     public void start() throws MQClientException {
+        // 即是一开始的producerGroupTemp
         this.setProducerGroup(withNamespace(this.producerGroup));
+        // 启动
         this.defaultMQProducerImpl.start();
         if (null != traceDispatcher) {
             try {
@@ -322,6 +324,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
         Message msg) throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
         Validators.checkMessage(msg, this);
         msg.setTopic(withNamespace(msg.getTopic()));
+        // 下发
         return this.defaultMQProducerImpl.send(msg);
     }
 

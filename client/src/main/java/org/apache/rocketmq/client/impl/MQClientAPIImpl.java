@@ -464,6 +464,7 @@ public class MQClientAPIImpl {
                 request = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE, requestHeader);
             }
         }
+        // 设置请求体
         request.setBody(msg.getBody());
 
         switch (communicationMode) {
@@ -484,6 +485,7 @@ public class MQClientAPIImpl {
                 if (timeoutMillis < costTimeSync) {
                     throw new RemotingTooMuchRequestException("sendMessage call timeout");
                 }
+                // 下发
                 return this.sendMessageSync(addr, brokerName, msg, timeoutMillis - costTimeSync, request);
             default:
                 assert false;
@@ -500,8 +502,10 @@ public class MQClientAPIImpl {
         final long timeoutMillis,
         final RemotingCommand request
     ) throws RemotingException, MQBrokerException, InterruptedException {
+        // 发送请求
         RemotingCommand response = this.remotingClient.invokeSync(addr, request, timeoutMillis);
         assert response != null;
+        // 解析响应
         return this.processSendResponse(brokerName, msg, response);
     }
 
@@ -657,6 +661,7 @@ public class MQClientAPIImpl {
                 sendStatus = SendStatus.SLAVE_NOT_AVAILABLE;
                 break;
             }
+            // 下发成功
             case ResponseCode.SUCCESS: {
                 sendStatus = SendStatus.SEND_OK;
                 break;

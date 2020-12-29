@@ -69,6 +69,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 
+// 生产者入口
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultMQProducerTest {
     @Spy
@@ -85,16 +86,22 @@ public class DefaultMQProducerTest {
     private String topic = "FooBar";
     private String producerGroupPrefix = "FooBar_PID";
 
+    // 初始化
     @Before
     public void init() throws Exception {
+        // 生产者组名
         String producerGroupTemp = producerGroupPrefix + System.currentTimeMillis();
+        // 新建生产者
         producer = new DefaultMQProducer(producerGroupTemp);
-        producer.setNamesrvAddr("127.0.0.1:9876");
+        // 设置namesrv
+        producer.setNamesrvAddr("172.16.0.117:9876");
+        // 设置压缩阈值
         producer.setCompressMsgBodyOverHowmuch(16);
         message = new Message(topic, new byte[] {'a'});
         zeroMsg = new Message(topic, new byte[] {});
         bigMessage = new Message(topic, "This is a very huge message!".getBytes());
 
+        //启动
         producer.start();
 
         Field field = DefaultMQProducerImpl.class.getDeclaredField("mQClientFactory");
@@ -144,6 +151,7 @@ public class DefaultMQProducerTest {
     public void testSendMessage_NoRoute() throws RemotingException, InterruptedException, MQBrokerException {
         when(mQClientAPIImpl.getNameServerAddressList()).thenReturn(Collections.singletonList("127.0.0.1:9876"));
         try {
+            // producer生产者下发消息
             producer.send(message);
             failBecauseExceptionWasNotThrown(MQClientException.class);
         } catch (MQClientException e) {
@@ -151,6 +159,7 @@ public class DefaultMQProducerTest {
         }
     }
 
+    // 正常发送
     @Test
     public void testSendMessageSync_Success() throws RemotingException, InterruptedException, MQBrokerException, MQClientException {
         when(mQClientAPIImpl.getTopicRouteInfoFromNameServer(anyString(), anyLong())).thenReturn(createTopicRoute());

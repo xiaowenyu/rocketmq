@@ -98,6 +98,12 @@ public class ClientConfig {
         }
     }
 
+    public static void main(String[] args) {
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.setNamesrvAddr("127.0.0.1:9876");
+        System.out.println(clientConfig.withNamespace("127.0.0.1:9876"));
+    }
+
     public String withNamespace(String resource) {
         return NamespaceUtil.wrapNamespace(this.getNamespace(), resource);
     }

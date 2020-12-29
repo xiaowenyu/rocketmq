@@ -145,6 +145,7 @@ public class MQClientInstance {
 
         this.rebalanceService = new RebalanceService(this);
 
+        //新建默认的producer，start的时候用到
         this.defaultMQProducer = new DefaultMQProducer(MixAll.CLIENT_INNER_PRODUCER_GROUP);
         this.defaultMQProducer.resetClientConfig(clientConfig);
 
@@ -229,15 +230,20 @@ public class MQClientInstance {
                     this.serviceState = ServiceState.START_FAILED;
                     // If not specified,looking address from name server
                     if (null == this.clientConfig.getNamesrvAddr()) {
+                        // 远程获取namesrv
                         this.mQClientAPIImpl.fetchNameServerAddr();
                     }
                     // Start request-response channel
+                    // 启动netty客户端
                     this.mQClientAPIImpl.start();
                     // Start various schedule tasks
+                    // 启动系列定时任务
                     this.startScheduledTask();
                     // Start pull service
+                    //启动拉取请求线程
                     this.pullMessageService.start();
                     // Start rebalance service
+                    // 启动负载均衡线程
                     this.rebalanceService.start();
                     // Start push service
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
@@ -251,6 +257,7 @@ public class MQClientInstance {
             }
         }
     }
+    // 启动客户端实例
 
     private void startScheduledTask() {
         if (null == this.clientConfig.getNamesrvAddr()) {
@@ -272,6 +279,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    // 更新topic 路由
                     MQClientInstance.this.updateTopicRouteInfoFromNameServer();
                 } catch (Exception e) {
                     log.error("ScheduledTask updateTopicRouteInfoFromNameServer exception", e);
@@ -284,6 +292,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    // 定时发送broker心跳
                     MQClientInstance.this.cleanOfflineBroker();
                     MQClientInstance.this.sendHeartbeatToAllBrokerWithLock();
                 } catch (Exception e) {
@@ -297,6 +306,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    // 持久化comsumer offset
                     MQClientInstance.this.persistAllConsumerOffset();
                 } catch (Exception e) {
                     log.error("ScheduledTask persistAllConsumerOffset exception", e);
