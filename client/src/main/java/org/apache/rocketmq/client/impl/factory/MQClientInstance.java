@@ -983,6 +983,7 @@ public class MQClientInstance {
             MQConsumerInner impl = entry.getValue();
             if (impl != null) {
                 try {
+                    // 根据具体的客户端选择负载均衡实现
                     impl.doRebalance();
                 } catch (Throwable e) {
                     log.error("doRebalance exception", e);
