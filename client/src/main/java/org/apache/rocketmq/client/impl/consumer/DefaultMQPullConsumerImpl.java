@@ -628,6 +628,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
 
                 this.checkConfig();
 
+                //设置rebalance topic
                 this.copySubscription();
 
                 if (this.defaultMQPullConsumer.getMessageModel() == MessageModel.CLUSTERING) {
@@ -636,6 +637,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
 
                 this.mQClientFactory = MQClientManager.getInstance().getOrCreateMQClientInstance(this.defaultMQPullConsumer, this.rpcHook);
 
+                // 初始化rebalance
                 this.rebalanceImpl.setConsumerGroup(this.defaultMQPullConsumer.getConsumerGroup());
                 this.rebalanceImpl.setMessageModel(this.defaultMQPullConsumer.getMessageModel());
                 this.rebalanceImpl.setAllocateMessageQueueStrategy(this.defaultMQPullConsumer.getAllocateMessageQueueStrategy());
@@ -673,6 +675,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
                         null);
                 }
 
+                // 启动rebalance服务
                 mQClientFactory.start();
                 log.info("the consumer [{}] start OK", this.defaultMQPullConsumer.getConsumerGroup());
                 this.serviceState = ServiceState.RUNNING;
@@ -744,6 +747,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
                 for (final String topic : registerTopics) {
                     SubscriptionData subscriptionData = FilterAPI.buildSubscriptionData(this.defaultMQPullConsumer.getConsumerGroup(),
                         topic, SubscriptionData.SUB_ALL);
+                    // 设置topic
                     this.rebalanceImpl.getSubscriptionInner().put(topic, subscriptionData);
                 }
             }
