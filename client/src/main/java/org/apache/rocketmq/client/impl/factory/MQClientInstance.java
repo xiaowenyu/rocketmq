@@ -319,6 +319,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    // 调整线程池
                     MQClientInstance.this.adjustThreadPool();
                 } catch (Exception e) {
                     log.error("ScheduledTask adjustThreadPool exception", e);
@@ -477,6 +478,7 @@ public class MQClientInstance {
     public void sendHeartbeatToAllBrokerWithLock() {
         if (this.lockHeartbeat.tryLock()) {
             try {
+                // 发送心跳给所有的broker
                 this.sendHeartbeatToAllBroker();
                 this.uploadFilterClassSource();
             } catch (final Exception e) {
@@ -538,6 +540,7 @@ public class MQClientInstance {
     }
 
     private void sendHeartbeatToAllBroker() {
+        // 准备心跳的数据
         final HeartbeatData heartbeatData = this.prepareHeartbeatData();
         final boolean producerEmpty = heartbeatData.getProducerDataSet().isEmpty();
         final boolean consumerEmpty = heartbeatData.getConsumerDataSet().isEmpty();
@@ -706,7 +709,7 @@ public class MQClientInstance {
         // clientID
         heartbeatData.setClientID(this.clientId);
 
-        // Consumer
+        // Consumer， 将所有的 消费者（组） 封装起来丢到mq
         for (Map.Entry<String, MQConsumerInner> entry : this.consumerTable.entrySet()) {
             MQConsumerInner impl = entry.getValue();
             if (impl != null) {
@@ -878,6 +881,7 @@ public class MQClientInstance {
             return false;
         }
 
+        // 将消费者添加进消费者表，同个进程组有不同的消费者，同个进程消费者组唯一
         MQConsumerInner prev = this.consumerTable.putIfAbsent(group, consumer);
         if (prev != null) {
             log.warn("the consumer group[" + group + "] exist already.");

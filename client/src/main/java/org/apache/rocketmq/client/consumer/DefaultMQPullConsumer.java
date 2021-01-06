@@ -293,6 +293,7 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
     @Override
     public void start() throws MQClientException {
         this.setConsumerGroup(NamespaceUtil.wrapNamespace(this.getNamespace(), this.consumerGroup));
+        // 启动
         this.defaultMQPullConsumerImpl.start();
     }
 
@@ -365,6 +366,7 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
     @Override
     public PullResult pullBlockIfNotFound(MessageQueue mq, String subExpression, long offset, int maxNums)
         throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
+        // 转换后拉取
         return this.defaultMQPullConsumerImpl.pullBlockIfNotFound(queueWithNamespace(mq), subExpression, offset, maxNums);
     }
 

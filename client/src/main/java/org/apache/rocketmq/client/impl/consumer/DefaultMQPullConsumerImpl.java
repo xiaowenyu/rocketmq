@@ -230,6 +230,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
     private PullResult pullSyncImpl(MessageQueue mq, SubscriptionData subscriptionData, long offset, int maxNums, boolean block,
         long timeout)
         throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
+        // 确保consumer在运行状态
         this.isRunning();
 
         if (null == mq) {
@@ -251,6 +252,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
         long timeoutMillis = block ? this.defaultMQPullConsumer.getConsumerTimeoutMillisWhenSuspend() : timeout;
 
         boolean isTagType = ExpressionType.isTagType(subscriptionData.getExpressionType());
+        //拉取
         PullResult pullResult = this.pullAPIWrapper.pullKernelImpl(
             mq,
             subscriptionData.getSubString(),
@@ -531,6 +533,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
     public PullResult pullBlockIfNotFound(MessageQueue mq, String subExpression, long offset, int maxNums)
         throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
         SubscriptionData subscriptionData = getSubscriptionData(mq, subExpression);
+        // 同步拉取
         return this.pullSyncImpl(mq, subscriptionData, offset, maxNums, true, this.getDefaultMQPullConsumer().getConsumerPullTimeoutMillis());
     }
 
@@ -624,6 +627,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
     public synchronized void start() throws MQClientException {
         switch (this.serviceState) {
             case CREATE_JUST:
+                // 预设失败
                 this.serviceState = ServiceState.START_FAILED;
 
                 this.checkConfig();
@@ -631,6 +635,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
                 //设置rebalance topic
                 this.copySubscription();
 
+                // 集群模式，设置instanceName为pid
                 if (this.defaultMQPullConsumer.getMessageModel() == MessageModel.CLUSTERING) {
                     this.defaultMQPullConsumer.changeInstanceNameToPID();
                 }
@@ -640,6 +645,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
                 // 初始化rebalance
                 this.rebalanceImpl.setConsumerGroup(this.defaultMQPullConsumer.getConsumerGroup());
                 this.rebalanceImpl.setMessageModel(this.defaultMQPullConsumer.getMessageModel());
+                //设置负载分配策略
                 this.rebalanceImpl.setAllocateMessageQueueStrategy(this.defaultMQPullConsumer.getAllocateMessageQueueStrategy());
                 this.rebalanceImpl.setmQClientFactory(this.mQClientFactory);
 
@@ -655,7 +661,9 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
                         case BROADCASTING:
                             this.offsetStore = new LocalFileOffsetStore(this.mQClientFactory, this.defaultMQPullConsumer.getConsumerGroup());
                             break;
+                            // 集群模式
                         case CLUSTERING:
+                            // 新建offsetStore
                             this.offsetStore = new RemoteBrokerOffsetStore(this.mQClientFactory, this.defaultMQPullConsumer.getConsumerGroup());
                             break;
                         default:
@@ -666,6 +674,7 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
 
                 this.offsetStore.load();
 
+                //  注册消费者到进程的消费者表
                 boolean registerOK = mQClientFactory.registerConsumer(this.defaultMQPullConsumer.getConsumerGroup(), this);
                 if (!registerOK) {
                     this.serviceState = ServiceState.CREATE_JUST;

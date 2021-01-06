@@ -45,7 +45,7 @@ public class MQClientManager {
     }
 
     public MQClientInstance getOrCreateMQClientInstance(final ClientConfig clientConfig, RPCHook rpcHook) {
-        // 新建clientId，localIp@InstanceName@unitname
+        // 新建clientId，localIp@InstanceName@unitname， 同台服务器同个节点ip一样, 容易client id一样
         String clientId = clientConfig.buildMQClientId();
         // 在Map缓存中获取
         MQClientInstance instance = this.factoryTable.get(clientId);

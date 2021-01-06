@@ -21,10 +21,13 @@ import org.apache.rocketmq.client.consumer.PullResult;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.message.MessageQueue;
 
+// 消费者入口
 public class PullConsumerTest {
     public static void main(String[] args) throws MQClientException {
         DefaultMQPullConsumer consumer = new DefaultMQPullConsumer("please_rename_unique_group_name_5");
         consumer.setNamesrvAddr("127.0.0.1:9876");
+
+        // 消费者启动
         consumer.start();
 
         try {
@@ -36,6 +39,7 @@ public class PullConsumerTest {
             long offset = 26;
 
             long beginTime = System.currentTimeMillis();
+            // 消费者拉取数据
             PullResult pullResult = consumer.pullBlockIfNotFound(mq, null, offset, 32);
             System.out.printf("%s%n", System.currentTimeMillis() - beginTime);
             System.out.printf("%s%n", pullResult);
