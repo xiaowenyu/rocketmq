@@ -267,6 +267,7 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
     /**
      * Default constructor.
      */
+    //默认平均分策略
     public DefaultMQPushConsumer() {
         this(null, MixAll.DEFAULT_CONSUMER_GROUP, null, new AllocateMessageQueueAveragely());
     }
@@ -755,6 +756,7 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
      */
     @Override
     public void subscribe(String topic, String subExpression) throws MQClientException {
+        // 订阅topic
         this.defaultMQPushConsumerImpl.subscribe(withNamespace(topic), subExpression);
     }
 

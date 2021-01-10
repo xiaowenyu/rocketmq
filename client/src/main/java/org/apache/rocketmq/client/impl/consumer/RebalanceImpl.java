@@ -380,6 +380,7 @@ public abstract class RebalanceImpl {
 
                 this.removeDirtyOffset(mq);
                 ProcessQueue pq = new ProcessQueue();
+                // 计算拉取进度，设置进度
                 long nextOffset = this.computePullFromWhere(mq);
                 if (nextOffset >= 0) {
                     ProcessQueue pre = this.processQueueTable.putIfAbsent(mq, pq);
@@ -401,6 +402,7 @@ public abstract class RebalanceImpl {
             }
         }
 
+        // 负载均衡之后，触发执行获取任务
         this.dispatchPullRequest(pullRequestList);
 
         return changed;
