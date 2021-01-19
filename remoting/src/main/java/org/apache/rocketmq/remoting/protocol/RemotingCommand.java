@@ -463,6 +463,11 @@ public class RemotingCommand {
         return (this.flag & bits) == bits;
     }
 
+    public static void main(String[] args) {
+        int bits = 1 << RPC_TYPE;
+        System.out.println((1 & bits) == bits);
+    }
+
     public LanguageCode getLanguage() {
         return language;
     }
