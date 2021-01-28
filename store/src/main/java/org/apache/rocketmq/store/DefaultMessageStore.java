@@ -128,6 +128,7 @@ public class DefaultMessageStore implements MessageStore {
         if (messageStoreConfig.isEnableDLegerCommitLog()) {
             this.commitLog = new DLedgerCommitLog(this);
         } else {
+            // 初始化commitLog对象
             this.commitLog = new CommitLog(this);
         }
         this.consumeQueueTable = new ConcurrentHashMap<>(32);
@@ -138,6 +139,7 @@ public class DefaultMessageStore implements MessageStore {
         this.storeStatsService = new StoreStatsService();
         this.indexService = new IndexService(this);
         if (!messageStoreConfig.isEnableDLegerCommitLog()) {
+            // 主从同步初始化
             this.haService = new HAService(this);
         } else {
             this.haService = null;
@@ -152,6 +154,7 @@ public class DefaultMessageStore implements MessageStore {
             this.transientStorePool.init();
         }
 
+        // 启动更新缓冲区
         this.allocateMappedFileService.start();
 
         this.indexService.start();
@@ -178,6 +181,7 @@ public class DefaultMessageStore implements MessageStore {
     /**
      * @throws IOException
      */
+    // 加载文件
     public boolean load() {
         boolean result = true;
 
@@ -190,15 +194,18 @@ public class DefaultMessageStore implements MessageStore {
             }
 
             // load Commit Log
+            // 加载commit log
             result = result && this.commitLog.load();
 
             // load Consume Queue
+            // 加载consume queue
             result = result && this.loadConsumeQueue();
 
             if (result) {
                 this.storeCheckpoint =
                     new StoreCheckpoint(StorePathConfigHelper.getStoreCheckpoint(this.messageStoreConfig.getStorePathRootDir()));
 
+                // 加载索引文件
                 this.indexService.load(lastExitOK);
 
                 this.recover(lastExitOK);
@@ -220,8 +227,10 @@ public class DefaultMessageStore implements MessageStore {
     /**
      * @throws Exception
      */
+    // 默认的信息存储
     public void start() throws Exception {
 
+        // 文件头加锁
         lock = lockFile.getChannel().tryLock(0, 1, false);
         if (lock == null || lock.isShared() || !lock.isValid()) {
             throw new RuntimeException("Lock failed,MQ already started");
@@ -279,14 +288,19 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         if (!messageStoreConfig.isEnableDLegerCommitLog()) {
+            // 主从同步
             this.haService.start();
             this.handleScheduleMessageService(messageStoreConfig.getBrokerRole());
         }
 
+        // 刷新消费者队列 offset
         this.flushConsumeQueueService.start();
+        // 刷新提交日志
         this.commitLog.start();
+        // 刷新stat日志
         this.storeStatsService.start();
 
+        //创建临时文件
         this.createTempFile();
         this.addScheduleTask();
         this.shutdown = false;

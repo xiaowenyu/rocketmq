@@ -144,6 +144,7 @@ public class MappedFileQueue {
         }
     }
 
+    // 映射 文件
     public boolean load() {
         File dir = new File(this.storePath);
         File[] files = dir.listFiles();

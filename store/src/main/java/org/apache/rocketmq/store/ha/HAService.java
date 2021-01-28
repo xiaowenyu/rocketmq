@@ -197,6 +197,7 @@ public class HAService {
         /**
          * {@inheritDoc}
          */
+        // nio实现主从同步
         @Override
         public void run() {
             log.info(this.getServiceName() + " service started");
