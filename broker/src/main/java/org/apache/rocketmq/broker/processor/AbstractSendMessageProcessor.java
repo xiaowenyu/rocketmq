@@ -286,6 +286,7 @@ public abstract class AbstractSendMessageProcessor extends AsyncNettyRequestProc
         SendMessageRequestHeaderV2 requestHeaderV2 = null;
         SendMessageRequestHeader requestHeader = null;
         switch (request.getCode()) {
+            // 接收消息
             case RequestCode.SEND_BATCH_MESSAGE:
             case RequestCode.SEND_MESSAGE_V2:
                 requestHeaderV2 =

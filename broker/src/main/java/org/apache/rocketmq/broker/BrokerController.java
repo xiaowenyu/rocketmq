@@ -884,6 +884,7 @@ public class BrokerController {
             this.fileWatchService.start();
         }
 
+        // broker 对外客户端
         if (this.brokerOuterAPI != null) {
             this.brokerOuterAPI.start();
         }
@@ -911,6 +912,7 @@ public class BrokerController {
             @Override
             public void run() {
                 try {
+                    // 注册broker到namesrv
                     BrokerController.this.registerBrokerAll(true, false, brokerConfig.isForceRegister());
                 } catch (Throwable e) {
                     log.error("registerBrokerAll Exception", e);

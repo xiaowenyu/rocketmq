@@ -71,6 +71,7 @@ public class BrokerOuterAPI {
     }
 
     public BrokerOuterAPI(final NettyClientConfig nettyClientConfig, RPCHook rpcHook) {
+        // 远程客户端
         this.remotingClient = new NettyRemotingClient(nettyClientConfig);
         this.remotingClient.registerRPCHook(rpcHook);
     }
@@ -108,6 +109,7 @@ public class BrokerOuterAPI {
             lst.add(addr);
         }
 
+        // 更新namesrv列表
         this.remotingClient.updateNameServerAddressList(lst);
     }
 
@@ -147,6 +149,7 @@ public class BrokerOuterAPI {
                     @Override
                     public void run() {
                         try {
+                            // 注册broker
                             RegisterBrokerResult result = registerBroker(namesrvAddr,oneway, timeoutMills,requestHeader,body);
                             if (result != null) {
                                 registerBrokerResultList.add(result);

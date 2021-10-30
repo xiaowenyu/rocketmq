@@ -47,11 +47,14 @@ public class TransientStorePool {
      * It's a heavy init method.
      */
     public void init() {
+        // 初始化池化的buffer，默认5个
         for (int i = 0; i < poolSize; i++) {
+            // 分配直接内存，默认1G
             ByteBuffer byteBuffer = ByteBuffer.allocateDirect(fileSize);
 
             final long address = ((DirectBuffer) byteBuffer).address();
             Pointer pointer = new Pointer(address);
+            // 调用操作系统给直接内存加锁
             LibC.INSTANCE.mlock(pointer, new NativeLong(fileSize));
 
             availableBuffers.offer(byteBuffer);
@@ -59,6 +62,7 @@ public class TransientStorePool {
     }
 
     public void destroy() {
+        // 释放内核直接内存锁
         for (ByteBuffer byteBuffer : availableBuffers) {
             final long address = ((DirectBuffer) byteBuffer).address();
             Pointer pointer = new Pointer(address);
@@ -67,12 +71,14 @@ public class TransientStorePool {
     }
 
     public void returnBuffer(ByteBuffer byteBuffer) {
+        // 回滚重用直接内存
         byteBuffer.position(0);
         byteBuffer.limit(fileSize);
         this.availableBuffers.offerFirst(byteBuffer);
     }
 
     public ByteBuffer borrowBuffer() {
+        // 拿到第一个buffer
         ByteBuffer buffer = availableBuffers.pollFirst();
         if (availableBuffers.size() < poolSize * 0.4) {
             log.warn("TransientStorePool only remain {} sheets.", availableBuffers.size());

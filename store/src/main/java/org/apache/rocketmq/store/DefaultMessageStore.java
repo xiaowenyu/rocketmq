@@ -144,6 +144,7 @@ public class DefaultMessageStore implements MessageStore {
         } else {
             this.haService = null;
         }
+        // 分发消息到consumeQueue和Index
         this.reputMessageService = new ReputMessageService();
 
         this.scheduleMessageService = new ScheduleMessageService(this);
@@ -463,12 +464,15 @@ public class DefaultMessageStore implements MessageStore {
             return CompletableFuture.completedFuture(new PutMessageResult(checkStoreStatus, null));
         }
 
+        // 检查消息是否合法
         PutMessageStatus msgCheckStatus = this.checkMessages(messageExtBatch);
         if (msgCheckStatus == PutMessageStatus.MESSAGE_ILLEGAL) {
             return CompletableFuture.completedFuture(new PutMessageResult(msgCheckStatus, null));
         }
 
+        // 落盘耗时计算
         long beginTime = this.getSystemClock().now();
+        // 写消息
         CompletableFuture<PutMessageResult> resultFuture = this.commitLog.asyncPutMessages(messageExtBatch);
 
         resultFuture.thenAccept((result) -> {
@@ -1514,7 +1518,9 @@ public class DefaultMessageStore implements MessageStore {
     }
 
     public void putMessagePositionInfo(DispatchRequest dispatchRequest) {
+        // 找到topic下的consumeQueue
         ConsumeQueue cq = this.findConsumeQueue(dispatchRequest.getTopic(), dispatchRequest.getQueueId());
+        // 写入
         cq.putMessagePositionInfoWrapper(dispatchRequest);
     }
 
@@ -1575,6 +1581,7 @@ public class DefaultMessageStore implements MessageStore {
             switch (tranType) {
                 case MessageSysFlag.TRANSACTION_NOT_TYPE:
                 case MessageSysFlag.TRANSACTION_COMMIT_TYPE:
+                    // 写入consumeQueue
                     DefaultMessageStore.this.putMessagePositionInfo(request);
                     break;
                 case MessageSysFlag.TRANSACTION_PREPARED_TYPE:
