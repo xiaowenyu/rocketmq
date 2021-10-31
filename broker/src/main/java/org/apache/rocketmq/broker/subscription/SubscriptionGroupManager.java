@@ -128,6 +128,7 @@ public class SubscriptionGroupManager extends ConfigManager {
                     log.info("auto create a subscription group, {}", subscriptionGroupConfig.toString());
                 }
                 this.dataVersion.nextVersion();
+                // 持久化消费者组配置信息
                 this.persist();
             }
         }

@@ -211,6 +211,7 @@ public abstract class NettyRemotingAbstract {
                                         response.setOpaque(opaque);
                                         response.markResponseType();
                                         try {
+                                            // 写响应回去
                                             ctx.writeAndFlush(response);
                                         } catch (Throwable e) {
                                             log.error("process request over, but response failed", e);
