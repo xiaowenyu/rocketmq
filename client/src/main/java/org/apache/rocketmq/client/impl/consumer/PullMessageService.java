@@ -56,6 +56,7 @@ public class PullMessageService extends ServiceThread {
         }
     }
 
+    // 立即执行请求
     public void executePullRequestImmediately(final PullRequest pullRequest) {
         try {
             this.pullRequestQueue.put(pullRequest);

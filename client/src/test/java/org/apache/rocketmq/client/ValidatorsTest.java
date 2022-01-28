@@ -22,6 +22,8 @@ import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.topic.TopicValidator;
 import org.junit.Test;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.fail;
@@ -46,6 +48,15 @@ public class ValidatorsTest {
         } catch (MQClientException e) {
             assertThat(e).hasMessageStartingWith(String.format("The specified topic[%s] contains illegal characters, allowing only %s", illegalTopic, Validators.VALID_PATTERN_STR));
         }
+    }
+
+    @Test
+    public void test(){
+        Integer i = new Integer(182219);
+        Integer i1 = new Integer(182219);
+        ConcurrentHashMap<Integer, Integer> concurrentHashMap = new ConcurrentHashMap<Integer, Integer>();
+        concurrentHashMap.put(i, i);
+        System.out.println(concurrentHashMap.contains(i1));
     }
 
     @Test

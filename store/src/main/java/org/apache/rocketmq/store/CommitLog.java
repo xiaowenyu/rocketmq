@@ -59,6 +59,7 @@ public class CommitLog {
     private final FlushCommitLogService flushCommitLogService;
 
     //If TransientStorePool enabled, we must flush message to FileChannel at fixed periods
+    // 如果允许临时 ，必须及时刷新信息到文件
     private final FlushCommitLogService commitLogService;
 
     private final AppendMessageCallback appendMessageCallback;
@@ -71,10 +72,12 @@ public class CommitLog {
     protected final PutMessageLock putMessageLock;
 
     public CommitLog(final DefaultMessageStore defaultMessageStore) {
+        // 初始化文件路径和映射配置
         this.mappedFileQueue = new MappedFileQueue(defaultMessageStore.getMessageStoreConfig().getStorePathCommitLog(),
             defaultMessageStore.getMessageStoreConfig().getMappedFileSizeCommitLog(), defaultMessageStore.getAllocateMappedFileService());
         this.defaultMessageStore = defaultMessageStore;
 
+        // 同步刷盘
         if (FlushDiskType.SYNC_FLUSH == defaultMessageStore.getMessageStoreConfig().getFlushDiskType()) {
             this.flushCommitLogService = new GroupCommitService();
         } else {
@@ -94,6 +97,7 @@ public class CommitLog {
 
     }
 
+    // 加载commitLog 文件
     public boolean load() {
         boolean result = this.mappedFileQueue.load();
         log.info("load commit log " + (result ? "OK" : "Failed"));
@@ -117,6 +121,7 @@ public class CommitLog {
     }
 
     public long flush() {
+        // 提交直接内存并刷盘
         this.mappedFileQueue.commit(0);
         this.mappedFileQueue.flush(0);
         return this.mappedFileQueue.getFlushedWhere();
@@ -674,6 +679,7 @@ public class CommitLog {
         });
     }
 
+    // 异步写入消息
     public CompletableFuture<PutMessageResult> asyncPutMessages(final MessageExtBatch messageExtBatch) {
         messageExtBatch.setStoreTimestamp(System.currentTimeMillis());
         AppendMessageResult result;
@@ -696,8 +702,10 @@ public class CommitLog {
         //fine-grained lock instead of the coarse-grained
         MessageExtBatchEncoder batchEncoder = batchEncoderThreadLocal.get();
 
+        // 预处理消息
         messageExtBatch.setEncodedBuff(batchEncoder.encode(messageExtBatch));
 
+        // 插入前加锁
         putMessageLock.lock();
         try {
             long beginLockTimestamp = this.defaultMessageStore.getSystemClock().now();
@@ -716,6 +724,7 @@ public class CommitLog {
                 return CompletableFuture.completedFuture(new PutMessageResult(PutMessageStatus.CREATE_MAPEDFILE_FAILED, null));
             }
 
+            // 插入commit_log
             result = mappedFile.appendMessages(messageExtBatch, this.appendMessageCallback);
             switch (result.getStatus()) {
                 case PUT_OK:
@@ -1425,6 +1434,7 @@ public class CommitLog {
                             flushOK = CommitLog.this.mappedFileQueue.getFlushedWhere() >= req.getNextOffset();
 
                             if (!flushOK) {
+                                // 刷盘
                                 CommitLog.this.mappedFileQueue.flush(0);
                             }
                         }
@@ -1446,12 +1456,15 @@ public class CommitLog {
             }
         }
 
+        // 刷盘任务
         public void run() {
             CommitLog.log.info(this.getServiceName() + " service started");
 
             while (!this.isStopped()) {
                 try {
+                    // 10毫秒
                     this.waitForRunning(10);
+                    // 刷盘
                     this.doCommit();
                 } catch (Exception e) {
                     CommitLog.log.warn(this.getServiceName() + " service has exception. ", e);
@@ -1694,6 +1707,7 @@ public class CommitLog {
             int msgNum = 0;
             msgIdBuilder.setLength(0);
             final long beginTimeMills = CommitLog.this.defaultMessageStore.now();
+            // 拿到需要落盘的消息
             ByteBuffer messagesByteBuff = messageExtBatch.getEncodedBuff();
 
             int sysFlag = messageExtBatch.getSysFlag();
@@ -1705,6 +1719,7 @@ public class CommitLog {
             messagesByteBuff.mark();
             while (messagesByteBuff.hasRemaining()) {
                 // 1 TOTALSIZE
+                // 总大小
                 final int msgPos = messagesByteBuff.position();
                 final int msgLen = messagesByteBuff.getInt();
                 final int bodyLen = msgLen - 40; //only for log, just estimate it
@@ -1751,13 +1766,16 @@ public class CommitLog {
                 }
                 queueOffset++;
                 msgNum++;
+                // 设置消息位置
                 messagesByteBuff.position(msgPos + msgLen);
             }
 
             messagesByteBuff.position(0);
             messagesByteBuff.limit(totalMsgLen);
+            // 落盘
             byteBuffer.put(messagesByteBuff);
             messageExtBatch.setEncodedBuff(null);
+            // 封装插入成功结果
             AppendMessageResult result = new AppendMessageResult(AppendMessageStatus.PUT_OK, wroteOffset, totalMsgLen, msgIdBuilder.toString(),
                 messageExtBatch.getStoreTimestamp(), beginQueueOffset, CommitLog.this.defaultMessageStore.now() - beginTimeMills);
             result.setMsgNum(msgNum);

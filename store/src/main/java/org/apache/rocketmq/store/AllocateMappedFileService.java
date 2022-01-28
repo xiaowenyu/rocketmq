@@ -57,6 +57,7 @@ public class AllocateMappedFileService extends ServiceThread {
             }
         }
 
+        // 磁盘缓存分配请求
         AllocateRequest nextReq = new AllocateRequest(nextFilePath, fileSize);
         boolean nextPutOK = this.requestTable.putIfAbsent(nextFilePath, nextReq) == null;
 
@@ -82,6 +83,7 @@ public class AllocateMappedFileService extends ServiceThread {
                     "RequestQueueSize : {}, StorePoolSize: {}", this.requestQueue.size(), this.messageStore.getTransientStorePool().availableBufferNums());
                 this.requestTable.remove(nextNextFilePath);
             } else {
+                // 请求分配入内存
                 boolean offerOK = this.requestQueue.offer(nextNextReq);
                 if (!offerOK) {
                     log.warn("never expected here, add a request to preallocate queue failed");
@@ -143,6 +145,7 @@ public class AllocateMappedFileService extends ServiceThread {
     /**
      * Only interrupted by the external thread, will return false
      */
+    // 更新缓冲区
     private boolean mmapOperation() {
         boolean isSuccess = false;
         AllocateRequest req = null;
