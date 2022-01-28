@@ -42,6 +42,7 @@ public class UpdateTopicSubCommand implements SubCommand {
         return "Update or create topic";
     }
 
+    // 解析命令的各项参数
     @Override
     public Options buildCommandlineOptions(Options options) {
         OptionGroup optionGroup = new OptionGroup();
@@ -93,6 +94,7 @@ public class UpdateTopicSubCommand implements SubCommand {
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
         try {
+            // 收集topic信息
             TopicConfig topicConfig = new TopicConfig();
             topicConfig.setReadQueueNums(8);
             topicConfig.setWriteQueueNums(8);
@@ -150,13 +152,18 @@ public class UpdateTopicSubCommand implements SubCommand {
                 return;
 
             } else if (commandLine.hasOption('c')) {
+                // 集群的方式创建topic
                 String clusterName = commandLine.getOptionValue('c').trim();
 
+                // 启动netty客户端
                 defaultMQAdminExt.start();
 
+                // 获取所有的master地址
                 Set<String> masterSet =
                     CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
+                // 轮询broker，每个broker都注册topic
                 for (String addr : masterSet) {
+                    // 创建topic
                     defaultMQAdminExt.createAndUpdateTopicConfig(addr, topicConfig);
                     System.out.printf("create topic to %s success.%n", addr);
                 }

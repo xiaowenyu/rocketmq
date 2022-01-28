@@ -90,11 +90,12 @@ public class MQAdminStartup {
         main0(args, null);
     }
 
+    // 操作命令客户端入口
     public static void main0(String[] args, RPCHook rpcHook) {
         System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
 
         //PackageConflictDetect.detectFastjson();
-
+        // 初始化MQAdmin命令客户端的命令处理对象
         initCommand();
 
         try {
@@ -148,6 +149,7 @@ public class MQAdminStartup {
     }
 
     public static void initCommand() {
+        // 创建+更新topic
         initCommand(new UpdateTopicSubCommand());
         initCommand(new DeleteTopicSubCommand());
         initCommand(new UpdateSubGroupSubCommand());
