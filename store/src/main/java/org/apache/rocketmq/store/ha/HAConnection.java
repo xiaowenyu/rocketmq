@@ -78,6 +78,7 @@ public class HAConnection {
         return socketChannel;
     }
 
+    // 主节点读取 拉取的offset数量
     class ReadSocketService extends ServiceThread {
         private static final int READ_MAX_BUFFER_SIZE = 1024 * 1024;
         private final Selector selector;
@@ -190,6 +191,7 @@ public class HAConnection {
         }
     }
 
+    // 主节点 写commit_log数据到从节点
     class WriteSocketService extends ServiceThread {
         private final Selector selector;
         private final SocketChannel socketChannel;

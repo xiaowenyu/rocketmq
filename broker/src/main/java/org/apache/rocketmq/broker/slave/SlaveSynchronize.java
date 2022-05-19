@@ -46,9 +46,12 @@ public class SlaveSynchronize {
     }
 
     public void syncAll() {
+        // 同步topic节点
         this.syncTopicConfig();
+        // 消费者组 offset同步
         this.syncConsumerOffset();
         this.syncDelayOffset();
+        // 消费者组同步
         this.syncSubscriptionGroupConfig();
     }
 
@@ -58,11 +61,13 @@ public class SlaveSynchronize {
             try {
                 TopicConfigSerializeWrapper topicWrapper =
                     this.brokerController.getBrokerOuterAPI().getAllTopicConfig(masterAddrBak);
+                // 对比数据版本
                 if (!this.brokerController.getTopicConfigManager().getDataVersion()
                     .equals(topicWrapper.getDataVersion())) {
 
                     this.brokerController.getTopicConfigManager().getDataVersion()
                         .assignNewOne(topicWrapper.getDataVersion());
+                    // 持久化topic
                     this.brokerController.getTopicConfigManager().getTopicConfigTable().clear();
                     this.brokerController.getTopicConfigManager().getTopicConfigTable()
                         .putAll(topicWrapper.getTopicConfigTable());

@@ -1153,6 +1153,7 @@ public class BrokerController {
     }
 
     private void handleSlaveSynchronize(BrokerRole role) {
+        // 从节点需要同步
         if (role == BrokerRole.SLAVE) {
             if (null != slaveSyncFuture) {
                 slaveSyncFuture.cancel(false);
@@ -1162,6 +1163,7 @@ public class BrokerController {
                 @Override
                 public void run() {
                     try {
+                        // ha 同步
                         BrokerController.this.slaveSynchronize.syncAll();
                     }
                     catch (Throwable e) {
@@ -1250,6 +1252,7 @@ public class BrokerController {
     private void startProcessorByHa(BrokerRole role) {
         if (BrokerRole.SLAVE != role) {
             if (this.transactionalMessageCheckService != null) {
+                // 事务消息检查服务
                 this.transactionalMessageCheckService.start();
             }
         }

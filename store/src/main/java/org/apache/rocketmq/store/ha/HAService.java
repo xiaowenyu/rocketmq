@@ -209,6 +209,7 @@ public class HAService {
 
                     if (selected != null) {
                         for (SelectionKey k : selected) {
+                            // 监听
                             if ((k.readyOps() & SelectionKey.OP_ACCEPT) != 0) {
                                 SocketChannel sc = ((ServerSocketChannel) k.channel()).accept();
 
@@ -325,6 +326,7 @@ public class HAService {
         }
     }
 
+    // 从节点同步客户端
     class HAClient extends ServiceThread {
         private static final int READ_MAX_BUFFER_SIZE = 1024 * 1024 * 4;
         private final AtomicReference<String> masterAddress = new AtomicReference<>();
@@ -335,6 +337,7 @@ public class HAService {
 
         private long currentReportedOffset = 0;
         private int dispatchPosition = 0;
+        // 限制读写缓冲区是4M
         private ByteBuffer byteBufferRead = ByteBuffer.allocate(READ_MAX_BUFFER_SIZE);
         private ByteBuffer byteBufferBackup = ByteBuffer.allocate(READ_MAX_BUFFER_SIZE);
 
@@ -359,6 +362,7 @@ public class HAService {
             return needHeart;
         }
 
+        // 上报进度给主节点
         private boolean reportSlaveMaxOffset(final long maxOffset) {
             this.reportOffset.position(0);
             this.reportOffset.limit(8);
@@ -410,6 +414,7 @@ public class HAService {
                     int readSize = this.socketChannel.read(this.byteBufferRead);
                     if (readSize > 0) {
                         readSizeZeroTimes = 0;
+                        // 持久化数据
                         boolean result = this.dispatchReadRequest();
                         if (!result) {
                             log.error("HAClient, dispatchReadRequest error");
@@ -452,16 +457,19 @@ public class HAService {
                         }
                     }
 
+                    // 同步到的数据持久化
                     if (diff >= (msgHeaderSize + bodySize)) {
                         byte[] bodyData = new byte[bodySize];
                         this.byteBufferRead.position(this.dispatchPosition + msgHeaderSize);
                         this.byteBufferRead.get(bodyData);
 
+                        // 持久化数据
                         HAService.this.defaultMessageStore.appendToCommitLog(masterPhyOffset, bodyData);
 
                         this.byteBufferRead.position(readSocketPos);
                         this.dispatchPosition += msgHeaderSize + bodySize;
 
+                        // 上报下一个拉取进度
                         if (!reportSlaveMaxOffsetPlus()) {
                             return false;
                         }
@@ -480,6 +488,7 @@ public class HAService {
             return true;
         }
 
+        // 将下一个进度写给主节点
         private boolean reportSlaveMaxOffsetPlus() {
             boolean result = true;
             long currentPhyOffset = HAService.this.defaultMessageStore.getMaxPhyOffset();
@@ -498,6 +507,7 @@ public class HAService {
         private boolean connectMaster() throws ClosedChannelException {
             if (null == socketChannel) {
                 String addr = this.masterAddress.get();
+                // addr为空时主节点不处理
                 if (addr != null) {
 
                     SocketAddress socketAddress = RemotingUtil.string2SocketAddress(addr);
@@ -550,6 +560,7 @@ public class HAService {
 
             while (!this.isStopped()) {
                 try {
+                    // 判断是否是从节点
                     if (this.connectMaster()) {
 
                         if (this.isTimeToReportOffset()) {
@@ -561,6 +572,7 @@ public class HAService {
 
                         this.selector.select(1000);
 
+                        // 处理拉取到的数据
                         boolean ok = this.processReadEvent();
                         if (!ok) {
                             this.closeMaster();
